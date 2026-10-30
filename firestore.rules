@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isManager() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+    }
+
+    match /users/{userId} {
+      // Users may read their own profile. Managers may read profiles for staff management.
+      allow read: if (isSignedIn() && request.auth.uid == userId) || isManager();
+
+      // Role changes are made by the project owner in Firebase Console, not by app users.
+      allow create, update, delete: if false;
+    }
+
+    match /staff/{staffId} {
+      // Managers manage all staff. Staff can only read their linked own record.
+      allow read: if isManager()
+        || (isSignedIn() && resource.data.authUid == request.auth.uid);
+      allow create, update, delete: if isManager();
+    }
+
+    match /rooms/{roomId} {
+      // Room inventory and housekeeping readiness are manager-managed.
+      allow read, create, update, delete: if isManager();
+    }
+
+    match /tasks/{taskId} {
+      // Managers manage all tasks. Staff can read only tasks assigned to them.
+      allow read: if isManager()
+        || (isSignedIn() && resource.data.assigneeUid == request.auth.uid);
+      allow create, delete: if isManager();
+      // Staff may change only the status on a task assigned to their account.
+      allow update: if isManager()
+        || (
+          isSignedIn()
+          && resource.data.assigneeUid == request.auth.uid
+          && request.resource.data.assigneeUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['pending', 'inProgress', 'completed']
+        );
+    }
+
+    // All other collections stay closed until their rules are added for a feature.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
