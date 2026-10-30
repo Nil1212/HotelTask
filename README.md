@@ -8,6 +8,10 @@ HotelTask is a responsive Flutter Web application for hotel managers and staff t
 
 The app requires a Firebase Authentication account with a Firestore user profile. The manager and staff role in `users/{uid}` controls which workspace opens.
 
+## Dashboard preview
+
+![HotelTask dashboard with Khmer language selected](screenshots/dashboard-public.png)
+
 ## Features
 
 - Firebase Authentication sign-in and sign-out.

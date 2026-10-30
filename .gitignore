@@ -2,6 +2,7 @@
 *.class
 *.log
 .firebase/
+screenshots/dashboard.png
 *.pyc
 *.swp
 .DS_Store
