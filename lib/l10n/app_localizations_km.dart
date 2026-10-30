@@ -87,6 +87,22 @@ class AppLocalizationsKm extends AppLocalizations {
   String get signIn => 'ចូលគណនី';
 
   @override
+  String get exploreDemo => 'សាកមើលកម្មវិធីសាកល្បង (មិនអាចកែប្រែបាន)';
+
+  @override
+  String get portfolioDemo => 'ការបង្ហាញសម្រាប់ស្នាដៃ';
+
+  @override
+  String get readOnlyDemo => 'ការសាកល្បងមើលតែប៉ុណ្ណោះ';
+
+  @override
+  String get readOnlyDemoNotice =>
+      'អ្នកកំពុងមើលទិន្នន័យគំរូ។ មិនអាចកែប្រែក្នុងការសាកល្បងនេះបានទេ។';
+
+  @override
+  String get exitDemo => 'ចាកចេញពីការសាកល្បង';
+
+  @override
   String get enterEmail => 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល។';
 
   @override

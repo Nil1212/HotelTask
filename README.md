@@ -6,7 +6,9 @@ HotelTask is a responsive Flutter Web application for hotel managers and staff t
 
 [Open HotelTask](https://hoteltask-portfolio.web.app)
 
-The app requires a Firebase Authentication account with a Firestore user profile. The manager and staff role in `users/{uid}` controls which workspace opens.
+Choose **Explore read-only demo** on the login page to browse the dashboard, tasks, staff, rooms, and reports without an account. The demo uses local sample data; editing controls are disabled and it does not read or change your live Firestore records.
+
+Manager and staff workspaces require a Firebase Authentication account with a Firestore user profile. The role in `users/{uid}` controls which workspace opens.
 
 ## Dashboard preview
 
@@ -15,6 +17,7 @@ The app requires a Firebase Authentication account with a Firestore user profile
 ## Features
 
 - Firebase Authentication sign-in and sign-out.
+- Public read-only portfolio demo using local sample data, separate from live Firebase records.
 - Manager and staff roles, with role checks in both the app and Firestore rules.
 - Manager dashboard with live task totals, including overdue tasks.
 - Task creation, assignment, editing, deletion, search, filtering, and sorting.

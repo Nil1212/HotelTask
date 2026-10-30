@@ -14,7 +14,7 @@ class PageHeading extends StatelessWidget {
 
   final String title;
   final String description;
-  final VoidCallback onCreateTask;
+  final VoidCallback? onCreateTask;
   final bool compact;
 
   @override
@@ -45,20 +45,21 @@ class PageHeading extends StatelessWidget {
             ),
           ],
         ),
-        FilledButton.icon(
-          onPressed: onCreateTask,
-          icon: const Icon(Icons.add, size: 19),
-          label: Text(strings.createTask),
-          style: FilledButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: compact ? 16 : 20,
-              vertical: 15,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+        if (onCreateTask != null)
+          FilledButton.icon(
+            onPressed: onCreateTask,
+            icon: const Icon(Icons.add, size: 19),
+            label: Text(strings.createTask),
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: compact ? 16 : 20,
+                vertical: 15,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -263,10 +264,10 @@ class PriorityBadge extends StatelessWidget {
 }
 
 class StatusBadge extends StatelessWidget {
-  const StatusBadge({super.key, required this.status, required this.onTap});
+  const StatusBadge({super.key, required this.status, this.onTap});
 
   final TaskStatus status;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

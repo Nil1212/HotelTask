@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../data/sample_rooms.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hotel_room.dart';
 import '../services/room_service.dart';
 
 class RoomsScreen extends StatefulWidget {
-  const RoomsScreen({super.key});
+  const RoomsScreen({super.key, this.isReadOnlyDemo = false});
+
+  final bool isReadOnlyDemo;
 
   @override
   State<RoomsScreen> createState() => _RoomsScreenState();
@@ -21,7 +26,9 @@ class _RoomsScreenState extends State<RoomsScreen> {
     final colors = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context)!;
     return StreamBuilder<List<HotelRoom>>(
-      stream: RoomService.instance.watchRooms(),
+      stream: widget.isReadOnlyDemo
+          ? Stream.value(sampleRooms)
+          : RoomService.instance.watchRooms(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _RoomMessage(
@@ -67,25 +74,35 @@ class _RoomsScreenState extends State<RoomsScreen> {
                           ),
                         ],
                       );
-                      final addButton = FilledButton.icon(
-                        onPressed: _saving ? null : () => _showRoomForm(rooms),
-                        icon: const Icon(Icons.add),
-                        label: Text(strings.addRoom),
-                      );
                       if (constraints.maxWidth < 560) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             title,
-                            const SizedBox(height: 14),
-                            addButton,
+                            if (!widget.isReadOnlyDemo) ...[
+                              const SizedBox(height: 14),
+                              FilledButton.icon(
+                                onPressed: _saving
+                                    ? null
+                                    : () => _showRoomForm(rooms),
+                                icon: const Icon(Icons.add),
+                                label: Text(strings.addRoom),
+                              ),
+                            ],
                           ],
                         );
                       }
                       return Row(
                         children: [
                           Expanded(child: title),
-                          addButton,
+                          if (!widget.isReadOnlyDemo)
+                            FilledButton.icon(
+                              onPressed: _saving
+                                  ? null
+                                  : () => _showRoomForm(rooms),
+                              icon: const Icon(Icons.add),
+                              label: Text(strings.addRoom),
+                            ),
                         ],
                       );
                     },
@@ -183,8 +200,13 @@ class _RoomsScreenState extends State<RoomsScreen> {
                                   child: _RoomCard(
                                     room: room,
                                     strings: strings,
-                                    onEdit: () => _showRoomForm(rooms, room),
-                                    onDelete: () => _deleteRoom(room),
+                                    isReadOnlyDemo: widget.isReadOnlyDemo,
+                                    onEdit: widget.isReadOnlyDemo
+                                        ? null
+                                        : () => _showRoomForm(rooms, room),
+                                    onDelete: widget.isReadOnlyDemo
+                                        ? null
+                                        : () => _deleteRoom(room),
                                     onStatusChanged: (status) =>
                                         _setStatus(room, status),
                                   ),
@@ -207,6 +229,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
     List<HotelRoom> existing, [
     HotelRoom? room,
   ]) async {
+    if (widget.isReadOnlyDemo) return;
     final strings = AppLocalizations.of(context)!;
     final result = await showDialog<HotelRoom>(
       context: context,
@@ -250,6 +273,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
   }
 
   Future<void> _setStatus(HotelRoom room, RoomStatus status) async {
+    if (widget.isReadOnlyDemo) return;
     try {
       await RoomService.instance.updateStatus(room.id, status);
     } catch (_) {
@@ -261,6 +285,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
   }
 
   Future<void> _deleteRoom(HotelRoom room) async {
+    if (widget.isReadOnlyDemo) return;
     final strings = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
@@ -313,14 +338,16 @@ class _RoomCard extends StatelessWidget {
   const _RoomCard({
     required this.room,
     required this.strings,
+    required this.isReadOnlyDemo,
     required this.onEdit,
     required this.onDelete,
     required this.onStatusChanged,
   });
   final HotelRoom room;
   final AppLocalizations strings;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final bool isReadOnlyDemo;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final ValueChanged<RoomStatus> onStatusChanged;
 
   @override
@@ -354,19 +381,23 @@ class _RoomCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'edit') onEdit();
-                    if (value == 'delete') onDelete();
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(value: 'edit', child: Text(strings.editRoom)),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Text(strings.deleteRoom),
-                    ),
-                  ],
-                ),
+                if (!isReadOnlyDemo)
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') onEdit?.call();
+                      if (value == 'delete') onDelete?.call();
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text(strings.editRoom),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(strings.deleteRoom),
+                      ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 12),
@@ -399,11 +430,13 @@ class _RoomCard extends StatelessWidget {
                     ),
                   )
                   .toList(),
-              onChanged: (status) {
-                if (status != null && status != room.status) {
-                  onStatusChanged(status);
-                }
-              },
+              onChanged: isReadOnlyDemo
+                  ? null
+                  : (status) {
+                      if (status != null && status != room.status) {
+                        onStatusChanged(status);
+                      }
+                    },
             ),
           ],
         ),

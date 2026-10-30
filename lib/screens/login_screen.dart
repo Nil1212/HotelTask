@@ -6,9 +6,14 @@ import '../services/auth_service.dart';
 import '../widgets/language_menu.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.onLocaleChanged});
+  const LoginScreen({
+    super.key,
+    required this.onLocaleChanged,
+    required this.onExploreDemo,
+  });
 
   final ValueChanged<Locale> onLocaleChanged;
+  final VoidCallback onExploreDemo;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -188,6 +193,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               )
                             : Text(strings.signIn),
+                      ),
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        onPressed: _isSigningIn ? null : widget.onExploreDemo,
+                        icon: const Icon(Icons.visibility_outlined),
+                        label: Text(strings.exploreDemo),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                        ),
                       ),
                     ],
                   ),

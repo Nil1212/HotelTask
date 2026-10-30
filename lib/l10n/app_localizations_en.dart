@@ -87,6 +87,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signIn => 'Sign in';
 
   @override
+  String get exploreDemo => 'Explore read-only demo';
+
+  @override
+  String get portfolioDemo => 'Portfolio demo';
+
+  @override
+  String get readOnlyDemo => 'Read-only demo';
+
+  @override
+  String get readOnlyDemoNotice =>
+      'You are viewing sample data. Changes are disabled in this demo.';
+
+  @override
+  String get exitDemo => 'Exit demo';
+
+  @override
   String get enterEmail => 'Enter your email address.';
 
   @override

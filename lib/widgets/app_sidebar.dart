@@ -8,11 +8,13 @@ class AppSidebar extends StatelessWidget {
     required this.selectedPage,
     required this.onPageSelected,
     required this.onLogout,
+    this.isReadOnlyDemo = false,
   });
 
   final int selectedPage;
   final ValueChanged<int> onPageSelected;
   final VoidCallback onLogout;
+  final bool isReadOnlyDemo;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +109,7 @@ class AppSidebar extends StatelessWidget {
             ),
             _NavItem(
               icon: Icons.logout_rounded,
-              label: strings.logout,
+              label: isReadOnlyDemo ? strings.exitDemo : strings.logout,
               onTap: onLogout,
             ),
             const SizedBox(height: 16),

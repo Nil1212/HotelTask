@@ -12,12 +12,14 @@ class StaffScreen extends StatefulWidget {
     required this.tasks,
     required this.onAddStaff,
     required this.onUpdateStaff,
+    this.isReadOnlyDemo = false,
   });
 
   final List<StaffMember> staff;
   final List<HotelTask> tasks;
   final Future<void> Function(StaffMember) onAddStaff;
   final Future<void> Function(StaffMember) onUpdateStaff;
+  final bool isReadOnlyDemo;
 
   @override
   State<StaffScreen> createState() => _StaffScreenState();
@@ -38,6 +40,7 @@ class _StaffScreenState extends State<StaffScreen> {
       widget.tasks.where((task) => task.assigneeId == member.id).length;
 
   Future<void> _showStaffForm([StaffMember? member]) async {
+    if (widget.isReadOnlyDemo) return;
     final result = await showDialog<StaffMember>(
       context: context,
       builder: (context) => StaffFormDialog(staff: member),
@@ -63,9 +66,9 @@ class _StaffScreenState extends State<StaffScreen> {
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.staffSaveError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.staffSaveError)));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -116,8 +119,10 @@ class _StaffScreenState extends State<StaffScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         heading,
-                        const SizedBox(height: 14),
-                        addButton,
+                        if (!widget.isReadOnlyDemo) ...[
+                          const SizedBox(height: 14),
+                          addButton,
+                        ],
                       ],
                     );
                   }
@@ -125,7 +130,7 @@ class _StaffScreenState extends State<StaffScreen> {
                   return Row(
                     children: [
                       Expanded(child: heading),
-                      addButton,
+                      if (!widget.isReadOnlyDemo) addButton,
                     ],
                   );
                 },
@@ -212,7 +217,9 @@ class _StaffScreenState extends State<StaffScreen> {
                           child: _StaffCard(
                             member: member,
                             taskCount: _taskCountFor(member),
-                            onEdit: () => _showStaffForm(member),
+                            onEdit: widget.isReadOnlyDemo
+                                ? null
+                                : () => _showStaffForm(member),
                           ),
                         );
                       }).toList(),
@@ -236,7 +243,7 @@ class _StaffCard extends StatelessWidget {
 
   final StaffMember member;
   final int taskCount;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -277,11 +284,12 @@ class _StaffCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                IconButton(
-                  tooltip: strings.editStaffTooltip,
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                ),
+                if (onEdit != null)
+                  IconButton(
+                    tooltip: strings.editStaffTooltip,
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
               ],
             ),
             const SizedBox(height: 18),

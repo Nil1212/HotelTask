@@ -254,6 +254,36 @@ abstract class AppLocalizations {
   /// **'Sign in'**
   String get signIn;
 
+  /// No description provided for @exploreDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore read-only demo'**
+  String get exploreDemo;
+
+  /// No description provided for @portfolioDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio demo'**
+  String get portfolioDemo;
+
+  /// No description provided for @readOnlyDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only demo'**
+  String get readOnlyDemo;
+
+  /// No description provided for @readOnlyDemoNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You are viewing sample data. Changes are disabled in this demo.'**
+  String get readOnlyDemoNotice;
+
+  /// No description provided for @exitDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit demo'**
+  String get exitDemo;
+
   /// No description provided for @enterEmail.
   ///
   /// In en, this message translates to:

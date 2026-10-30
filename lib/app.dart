@@ -22,6 +22,7 @@ class HotelTaskApp extends StatefulWidget {
 
 class _HotelTaskAppState extends State<HotelTaskApp> {
   bool _isDarkMode = false;
+  bool _isReadOnlyDemo = false;
   Locale _locale = const Locale('en');
   bool _localeLoaded = false;
 
@@ -132,9 +133,24 @@ class _HotelTaskAppState extends State<HotelTaskApp> {
             );
           }
 
+          if (_isReadOnlyDemo) {
+            return DashboardScreen(
+              userEmail: strings.portfolioDemo,
+              onSignOut: () => setState(() => _isReadOnlyDemo = false),
+              isDarkMode: _isDarkMode,
+              onToggleTheme: () => setState(() => _isDarkMode = !_isDarkMode),
+              locale: _locale,
+              onLocaleChanged: _changeLocale,
+              isReadOnlyDemo: true,
+            );
+          }
+
           final user = snapshot.data;
           if (user == null) {
-            return LoginScreen(onLocaleChanged: _changeLocale);
+            return LoginScreen(
+              onLocaleChanged: _changeLocale,
+              onExploreDemo: () => setState(() => _isReadOnlyDemo = true),
+            );
           }
 
           return StreamBuilder<UserProfile?>(

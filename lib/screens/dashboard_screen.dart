@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../data/sample_staff.dart';
+import '../data/sample_tasks.dart';
 import '../models/hotel_task.dart';
 import '../models/staff_member.dart';
 import '../l10n/app_localizations.dart';
@@ -22,6 +26,7 @@ class DashboardScreen extends StatefulWidget {
     required this.onToggleTheme,
     required this.locale,
     required this.onLocaleChanged,
+    this.isReadOnlyDemo = false,
   });
 
   final String userEmail;
@@ -30,6 +35,7 @@ class DashboardScreen extends StatefulWidget {
   final VoidCallback onToggleTheme;
   final Locale locale;
   final ValueChanged<Locale> onLocaleChanged;
+  final bool isReadOnlyDemo;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -49,8 +55,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _staffStream = StaffService.instance.watchStaff();
-    _taskStream = TaskService.instance.watchTasks();
+    _staffStream = widget.isReadOnlyDemo
+        ? Stream.value(sampleStaff)
+        : StaffService.instance.watchStaff();
+    _taskStream = widget.isReadOnlyDemo
+        ? Stream.value(sampleTasks())
+        : TaskService.instance.watchTasks();
   }
 
   List<HotelTask> _visibleTasks(List<HotelTask> tasks) {
@@ -134,6 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onPageSelected: (page) =>
                       setState(() => _selectedPage = page),
                   onLogout: widget.onSignOut,
+                  isReadOnlyDemo: widget.isReadOnlyDemo,
                 ),
               Expanded(
                 child: Column(
@@ -146,6 +157,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onThemeToggle: widget.onToggleTheme,
                       locale: widget.locale,
                       onLocaleChanged: widget.onLocaleChanged,
+                      isReadOnlyDemo: widget.isReadOnlyDemo,
                       onMenuPressed: compact
                           ? () => ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -154,6 +166,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             )
                           : null,
                     ),
+                    if (widget.isReadOnlyDemo)
+                      Container(
+                        width: double.infinity,
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 18,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                strings.readOnlyDemoNotice,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: widget.onSignOut,
+                              child: Text(strings.exitDemo),
+                            ),
+                          ],
+                        ),
+                      ),
                     Expanded(
                       child: StreamBuilder<List<StaffMember>>(
                         stream: _staffStream,
@@ -220,8 +267,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   onAddStaff: StaffService.instance.addStaff,
                                   onUpdateStaff:
                                       StaffService.instance.updateStaff,
+                                  isReadOnlyDemo: widget.isReadOnlyDemo,
                                 ),
-                                3 => const RoomsScreen(),
+                                3 => RoomsScreen(
+                                  isReadOnlyDemo: widget.isReadOnlyDemo,
+                                ),
                                 _ => ReportsScreen(tasks: tasks, staff: staff),
                               };
                             },
@@ -295,7 +345,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 description: _selectedPage == 1
                     ? strings.tasksDescription
                     : strings.dashboardDescription,
-                onCreateTask: () => _showTaskForm(context, staff),
+                onCreateTask: widget.isReadOnlyDemo
+                    ? null
+                    : () => _showTaskForm(context, staff),
                 compact: compact,
               ),
               if (_selectedPage == 0) ...[
@@ -672,7 +724,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               DataCell(
                 StatusBadge(
                   status: task.status,
-                  onTap: () => _cycleStatus(task),
+                  onTap: widget.isReadOnlyDemo
+                      ? null
+                      : () => _cycleStatus(task),
                 ),
               ),
               DataCell(Text(_formatDue(task.dueAt))),
@@ -684,24 +738,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   onSelected: (value) {
                     if (value == 'details') _showTaskDetails(task);
-                    if (value == 'status') _cycleStatus(task);
-                    if (value == 'edit') _editTask(task, staff);
-                    if (value == 'delete') _confirmDelete(task);
+                    if (!widget.isReadOnlyDemo && value == 'status') {
+                      _cycleStatus(task);
+                    }
+                    if (!widget.isReadOnlyDemo && value == 'edit') {
+                      _editTask(task, staff);
+                    }
+                    if (!widget.isReadOnlyDemo && value == 'delete') {
+                      _confirmDelete(task);
+                    }
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       value: 'details',
                       child: Text(strings.viewDetails),
                     ),
-                    PopupMenuItem(
-                      value: 'status',
-                      child: Text(strings.changeStatus),
-                    ),
-                    PopupMenuItem(value: 'edit', child: Text(strings.editTask)),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Text(strings.deleteTask),
-                    ),
+                    if (!widget.isReadOnlyDemo) ...[
+                      PopupMenuItem(
+                        value: 'status',
+                        child: Text(strings.changeStatus),
+                      ),
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text(strings.editTask),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(strings.deleteTask),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -764,7 +829,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         PriorityBadge(priority: task.priority),
                         StatusBadge(
                           status: task.status,
-                          onTap: () => _cycleStatus(task),
+                          onTap: widget.isReadOnlyDemo
+                              ? null
+                              : () => _cycleStatus(task),
                         ),
                       ],
                     ),
@@ -774,24 +841,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'details') _showTaskDetails(task);
-                  if (value == 'status') _cycleStatus(task);
-                  if (value == 'edit') _editTask(task, staff);
-                  if (value == 'delete') _confirmDelete(task);
+                  if (!widget.isReadOnlyDemo && value == 'status') {
+                    _cycleStatus(task);
+                  }
+                  if (!widget.isReadOnlyDemo && value == 'edit') {
+                    _editTask(task, staff);
+                  }
+                  if (!widget.isReadOnlyDemo && value == 'delete') {
+                    _confirmDelete(task);
+                  }
                 },
                 itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 'details',
                     child: Text(strings.viewDetails),
                   ),
-                  PopupMenuItem(
-                    value: 'status',
-                    child: Text(strings.changeStatus),
-                  ),
-                  PopupMenuItem(value: 'edit', child: Text(strings.editTask)),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(strings.deleteTask),
-                  ),
+                  if (!widget.isReadOnlyDemo) ...[
+                    PopupMenuItem(
+                      value: 'status',
+                      child: Text(strings.changeStatus),
+                    ),
+                    PopupMenuItem(value: 'edit', child: Text(strings.editTask)),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(strings.deleteTask),
+                    ),
+                  ],
                 ],
               ),
             ],
@@ -802,6 +877,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _cycleStatus(HotelTask task) async {
+    if (widget.isReadOnlyDemo) return;
     final statusError = AppLocalizations.of(context)!.taskStatusError;
     final nextStatus = switch (task.status) {
       TaskStatus.pending => TaskStatus.inProgress,
@@ -816,6 +892,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _confirmDelete(HotelTask task) async {
+    if (widget.isReadOnlyDemo) return;
     final strings = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     final shouldDelete = await showDialog<bool>(
@@ -851,6 +928,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     BuildContext context,
     List<StaffMember> staff,
   ) async {
+    if (widget.isReadOnlyDemo) return;
     final strings = AppLocalizations.of(context)!;
     if (staff.isEmpty) {
       ScaffoldMessenger.of(
@@ -961,6 +1039,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _editTask(HotelTask task, List<StaffMember> staff) async {
+    if (widget.isReadOnlyDemo) return;
     final strings = AppLocalizations.of(context)!;
     if (staff.isEmpty) {
       ScaffoldMessenger.of(

@@ -14,6 +14,7 @@ class AppTopBar extends StatelessWidget {
     required this.locale,
     required this.onLocaleChanged,
     this.onMenuPressed,
+    this.isReadOnlyDemo = false,
   });
 
   final bool compact;
@@ -24,6 +25,7 @@ class AppTopBar extends StatelessWidget {
   final Locale locale;
   final ValueChanged<Locale> onLocaleChanged;
   final VoidCallback? onMenuPressed;
+  final bool isReadOnlyDemo;
 
   @override
   Widget build(BuildContext context) {
@@ -51,14 +53,15 @@ class AppTopBar extends StatelessWidget {
               color: colors.onSurfaceVariant,
             ),
           ),
-          IconButton(
-            tooltip: strings.notifications,
-            onPressed: () {},
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: colors.onSurfaceVariant,
+          if (!isReadOnlyDemo)
+            IconButton(
+              tooltip: strings.notifications,
+              onPressed: () {},
+              icon: Icon(
+                Icons.notifications_none_rounded,
+                color: colors.onSurfaceVariant,
+              ),
             ),
-          ),
           const SizedBox(width: 12),
           Container(width: 1, height: 28, color: colors.outlineVariant),
           const SizedBox(width: 16),
@@ -74,7 +77,7 @@ class AppTopBar extends StatelessWidget {
                   children: [
                     const Icon(Icons.logout_rounded, size: 18),
                     const SizedBox(width: 10),
-                    Text(strings.signOut),
+                    Text(isReadOnlyDemo ? strings.exitDemo : strings.signOut),
                   ],
                 ),
               ),
@@ -112,7 +115,9 @@ class AppTopBar extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          strings.signedIn,
+                          isReadOnlyDemo
+                              ? strings.readOnlyDemo
+                              : strings.signedIn,
                           style: TextStyle(
                             fontSize: 11,
                             color: colors.onSurfaceVariant,
